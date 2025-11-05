@@ -1,2 +1,26 @@
-<h1>Első weboldalam GitHubon</h1>
-<p>Ez most már tényleg futni fog.</p>
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Weblap</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav>
+      <ul>
+        <li><button onclick="loadPage('manufactures.txt')">IOS manufacture</button></li>
+        <li><button onclick="loadPage('weather.txt')">IOS weather</button></li>
+        <li><button onclick="loadPage('')">Java gyak2</button></li>
+        <li><button onclick="loadPage('')">Algo elm</button></li>
+        <li><button onclick="loadPage('')">Algo gyak</button></li>
+      </ul>
+    </nav>
+
+    <main>
+      <div id="content" class="prewrap">Válassz egy oldalt a menüből...</div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

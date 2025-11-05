@@ -1,0 +1,123 @@
+//
+//  Client.swift
+//  ManufacturesAPI
+//
+//  Created by 4-11-3-hallgato on 2025. 10. 12..
+// Client.java
+
+import Foundation
+import Combine
+
+class Client: ObservableObject  {
+    @Published var manufactures = ManufacturesResponse()
+    
+    enum NetworkError: Error {
+        case invalidURL
+        case requestFailed(String)
+    }
+    func getManufactures() async throws -> ManufacturesResponse {
+        
+        guard let url = URL(string: "https://vpic.nhtsa.dot.gov/api/vehicles/getallmanufacturers?format=json") else {
+            throw NetworkError.invalidURL
+        }
+        
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NetworkError.requestFailed("invalid request")
+        }
+        
+        return try JSONDecoder().decode(ManufacturesResponse.self, from: data)
+    }
+    
+}
+
+//
+//  ContentView.swift
+//  WeatherAPI
+//
+//  Created by 4-11-3-hallgato on 2025. 10. 12..
+//
+
+import SwiftUI
+
+struct ContentView: View {
+    @StateObject var model = Client()
+    var body: some View {
+        VStack {
+            Text("\(Int(model.weather.current?.temp ?? 0)) C°")
+                .font(.largeTitle)
+                .bold()
+                .foregroundStyle(.blue)
+            List(model.weather.hourly ?? [], id: \.dt) {h in
+                Text("\(Date(timeIntervalSince1970: TimeInterval(h.dt ?? 0)))")
+                Text("\(Int(h.temp ?? 0)) C°")
+            }
+        }
+        .padding()
+        .task  {
+            do {
+                let data = try await Client().getWeatherForecast()
+                self.model.weather = data
+            } catch {
+                
+            }
+        }
+           
+    }
+}
+
+#Preview {
+    ContentView()
+}
+
+// This file was generated from JSON Schema using quicktype, do not modify it directly.
+// To parse the JSON, add this file to your project and do:
+//
+//   let manufacturesResponse = try? JSONDecoder().decode(ManufacturesResponse.self, from: jsonData)
+// ManufacturesResponse
+
+import Foundation
+
+// MARK: - ManufacturesResponse
+struct ManufacturesResponse: Codable {
+    var count: Int?
+    var message: String?
+    var searchCriteria: String?
+    var results: [Result]?
+
+    enum CodingKeys: String, CodingKey {
+        case count = "Count"
+        case message = "Message"
+        case searchCriteria = "SearchCriteria"
+        case results = "Results"
+    }
+}
+
+// MARK: - Result
+struct Result: Codable {
+    var country: String?
+    var mfrCommonName: String?
+    var mfrID: Int?
+    var mfrName: String?
+    var vehicleTypes: [VehicleType]?
+
+    enum CodingKeys: String, CodingKey {
+        case country = "Country"
+        case mfrCommonName = "Mfr_CommonName"
+        case mfrID = "Mfr_ID"
+        case mfrName = "Mfr_Name"
+        case vehicleTypes = "VehicleTypes"
+    }
+}
+
+// MARK: - VehicleType
+struct VehicleType: Codable {
+    var isPrimary: Bool?
+    var name: String?
+
+    enum CodingKeys: String, CodingKey {
+        case isPrimary = "IsPrimary"
+        case name = "Name"
+    }
+}
