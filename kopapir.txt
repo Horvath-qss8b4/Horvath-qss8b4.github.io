@@ -1,0 +1,191 @@
+//
+//  ContentView.swift
+//  KoPapirOllo
+//
+//  
+//
+
+import SwiftUI
+
+struct ContentView: View {
+    
+    @State var randomIndex = -1
+    @State var symbols: [String] = ["👊", "✋", "✌️"]
+    @State var user = -1
+    @State var score = 0
+    @State var winner = -2
+    @State var isFailed: Bool = false
+    @State var hitEnabled = true
+    var body: some View {
+        ZStack {
+            LinearGradient(gradient: Gradient(colors: [Color.orange, Color.white]), startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+            VStack(spacing: 30) {
+                Spacer()
+                Text("Kő-papír-olló")
+                    .font(.title).bold()
+                    .foregroundStyle(.white)
+                    .padding()
+                    .background(.blue)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                Spacer()
+                HStack {
+                    VStack {
+                        Text("A gép választotta")
+                            .font(.title)
+                        if randomIndex > -1 {
+                            Text(symbols[randomIndex])
+                                .font(.system(size: 100))
+                        }
+                        else {
+                            Text("💭")
+                                .font(.system(size: 100))
+                        }
+                    }
+                }
+                .padding()
+                .background(.blue)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                
+                HStack {
+                    if winner == -1 {
+                        Text("Döntetlen")
+                            .foregroundStyle(.white)
+                            .fontWeight(.bold)
+                            .font(.title2)
+                            .padding()
+                            .background(.gray)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                    else if winner == 0 {
+                        Text("Vesztettél")
+                            .foregroundStyle(.white)
+                            .fontWeight(.bold)
+                            .font(.title2)
+                            .padding()
+                            .background(.red)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                    else if winner == 1 {
+                        Text("Nyertél")
+                            .foregroundStyle(.white)
+                            .fontWeight(.bold)
+                            .font(.title2)
+                            .padding()
+                            .background(.green)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                } //HStack
+                
+                Text("Válassz egy jelet:")
+                    .font(.title2)
+                HStack {
+                    Text(symbols[0])
+                        .font(.system(size: 80))
+                        .padding()
+                        .background(user == 0 ? .orange : .blue)
+                        .onTapGesture {
+                            randomIndex = -1
+                            user = 0
+                            hitEnabled.toggle()
+                            randomIndex = Int(arc4random_uniform(3))
+                            winner = checkWin(randomIndex: randomIndex, user: user)
+                            isFailed = checkFailed()
+                            hitEnabled.toggle()
+                        }
+                        .allowsHitTesting(hitEnabled)
+                    Text(symbols[1])
+                        .font(.system(size: 80))
+                        .padding()
+                        .background(user == 1 ? .orange : .blue)
+                        .onTapGesture {
+                            randomIndex = -1
+                            user = 1
+                            hitEnabled.toggle()
+                            randomIndex = Int(arc4random_uniform(3))
+                            winner = checkWin(randomIndex: randomIndex, user: user)
+                            isFailed = checkFailed()
+                            hitEnabled.toggle()
+                        }
+                        .allowsHitTesting(hitEnabled)
+                    Text(symbols[2])
+                        .font(.system(size: 80))
+                        .padding()
+                        .background(user == 2 ? .orange : .blue)
+                        .onTapGesture {
+                            randomIndex = -1
+                            user = 2
+                            hitEnabled.toggle()
+                            randomIndex = Int(arc4random_uniform(3))
+                            winner = checkWin(randomIndex: randomIndex, user: user)
+                            isFailed = checkFailed()
+                            hitEnabled.toggle()
+                        }
+                        .allowsHitTesting(hitEnabled)
+                }
+                .alert("Ohh, de kár!", isPresented: $isFailed, actions: {
+                    Text("Sajnos vesztettél a gép ellen!")
+                    Button("Újra", role: .cancel, action: {
+                        randomIndex = -1
+                        user = -1
+                        score = 0
+                        winner = -2
+                        isFailed = false
+                    })
+                })
+                
+                .background(.blue)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                
+                Text("Pontszám: \(score)")
+                    .font(.title2).bold()
+                
+                Spacer()
+            }
+        }
+    }
+    func checkWin(randomIndex: Int, user: Int) -> Int {
+        if user > -1 && randomIndex > -1 {
+            if randomIndex == user {
+                return -1
+            }
+            else if randomIndex == 0 && user == 1 {
+                score += 5
+                return 1
+            }
+            else if randomIndex == 1 && user == 0 {
+                score -= 5
+                return 0
+            }
+            else if randomIndex == 1 && user == 2 {
+                score += 5
+                return 1
+            }
+            else if randomIndex == 2 && user == 1 {
+                score -= 5
+                return 0
+            }
+            else if randomIndex == 0 && user == 2 {
+                score -= 5
+                return 0
+            }
+            else if randomIndex == 2 && user == 0 {
+                score += 5
+                return 1
+            }
+        }
+        return -2
+    }
+    
+    func checkFailed() -> Bool {
+        if score < 0 {
+            score = 0
+            return true
+        }
+        return false
+    }
+}
+
+#Preview {
+    ContentView()
+}

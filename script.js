@@ -12,3 +12,16 @@ function loadPage(filename) {
       console.error(error);
     });
 }
+
+function loadPdf(url) {
+    if (!url) {
+        console.warn("Nincs URL megadva.");
+        return;
+    }
+    
+    // Mindig új fülön nyitja meg, a böngészőre bízva a PDF megjelenítést
+    window.open(url, '_blank'); 
+    
+    // Opcionálisan frissítheted a tartalomterületet is egy üzenettel
+    document.getElementById("content").innerText = "A PDF fájl új fülön nyílt meg.";
+}
