@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Products CRUD</title>
+    <script src="axios.min.js"></script>
+    <style>
+      body {
+        font-family: Arial;
+        padding: 20px;
+      }
+      table {
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid #444;
+      }
+      th,
+      td {
+        padding: 8px 12px;
+      }
+      input {
+        margin: 5px 0;
+        padding: 6px;
+        width: 240px;
+      }
+      button {
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Products CRUD</h1>
+    <button onclick="loadProducts()">Lista frissítése</button>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Név</th>
+          <th>Ár</th>
+          <th>Létrehozva</th>
+          <th>Műveletek</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <hr />
+
+    <h2>Új termék</h2>
+    <form onsubmit="addProduct(); return false;">
+      <input id="new_name" placeholder="Név" required /><br />
+      <input id="new_price" placeholder="Ár" required /><br />
+      <button type="submit">Hozzáadás</button>
+    </form>
+
+    <hr />
+
+    <h2>Termék módosítása</h2>
+    <form onsubmit="updateProduct(); return false;">
+      <input id="upd_id" placeholder="ID" required /><br />
+      <input id="upd_name" placeholder="Új név" required /><br />
+      <input id="upd_price" placeholder="Új ár" required /><br />
+      <button type="submit">Frissítés</button>
+    </form>
+
+    <script>
+      function loadProducts() {
+        axios.get("http://localhost:3000/products").then((res) => {
+          const tbody = document.getElementById("tbody");
+          tbody.innerHTML = "";
+
+          res.data.forEach((p) => {
+            tbody.innerHTML += `
+            <tr>
+              <td>${p.id}</td>
+              <td>${p.name}</td>
+              <td>${p.price}</td>
+              <td>${p.createdAt}</td>
+              <td>
+                <button onclick="fillUpdate(${p.id}, '${p.name}', ${p.price})">
+                  Szerkesztés
+                </button>
+                <button onclick="deleteProduct(${p.id})">
+                  Törlés
+                </button>
+              </td>
+            </tr>
+          `;
+          });
+        });
+      }
+
+      function addProduct() {
+        axios
+          .post("http://localhost:3000/products", {
+            name: document.getElementById("new_name").value,
+            price: document.getElementById("new_price").value,
+          })
+          .then(() => loadProducts()); 
+      }
+
+      function fillUpdate(id, name, price) {
+        document.getElementById("upd_id").value = id;
+        document.getElementById("upd_name").value = name;
+        document.getElementById("upd_price").value = price;
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+
+      function updateProduct() {
+        axios
+          .put(`http://localhost:3000/products/${upd_id.value}`, {
+            name: upd_name.value, 
+            price: upd_price.value, 
+          })
+          .then(() => loadProducts()); // frissítés
+      }
+
+      function deleteProduct(id) {
+        axios.delete(`http://localhost:3000/products/${id}`).then(() => loadProducts()); 
+      }
+    </script>
+  </body>
+</html>
+--------------------------------------------------------------------------------------------------------------------------------------
+const express = require("express");
+const mysql = require("mysql2");
+const cors = require("cors");
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const con = mysql.createConnection({
+  host: "localhost", 
+  user: "root", 
+  password: "", 
+  database: "crud_db", 
+});
+
+con.connect();
+
+app.get("/products", (req, res) => {
+  con.query("SELECT * FROM products", (err, rows) => {
+    res.json(rows);
+  });
+});
+
+app.get("/products/:id", (req, res) => {
+  con.query(
+    "SELECT * FROM products WHERE id = ?",
+    [req.params.id], 
+    (err, rows) => {
+      res.json(rows[0]);
+    }
+  );
+});
+
+app.post("/products", (req, res) => {
+  const sql = "INSERT INTO products (name, price, createdAt, updatedAt) VALUES (?, ?, NOW(), NOW())";
+  con.query(sql, [req.body.name, req.body.price], (err, result) => {
+    res.json({ id: result.insertId });
+  });
+});
+
+app.put("/products/:id", (req, res) => {
+  const sql = "UPDATE products SET name=?, price=?, updatedAt=NOW() WHERE id=?";
+  con.query(sql, [req.body.name, req.body.price, req.params.id], () => {
+    res.json({ status: "updated" });
+  });
+});
+
+app.delete("/products/:id", (req, res) => {
+  con.query("DELETE FROM products WHERE id=?", [req.params.id], () => {
+    res.json({ status: "deleted" });
+  });
+});
+
+app.listen(3000, () => console.log("API fut: http://localhost:3000"));
